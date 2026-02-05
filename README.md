@@ -1,182 +1,187 @@
-# 📅 Google Calendar MCP Server
+# MCP Google Calendar Server
 
-[![npm version](https://img.shields.io/npm/v/@artik0din/mcp-google-calendar.svg)](https://www.npmjs.com/package/@artik0din/mcp-google-calendar)
+[![npm version](https://badge.fury.io/js/@artik0din/mcp-google-calendar.svg)](https://www.npmjs.com/package/@artik0din/mcp-google-calendar)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![MCP](https://img.shields.io/badge/MCP-compatible-blue.svg)](https://modelcontextprotocol.io)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
 
-> A Model Context Protocol server for Google Calendar integration with OAuth2 authentication and multi-account support
+A powerful [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for Google Calendar integration. Provides comprehensive calendar management with OAuth2 authentication, multi-account support, and secure token encryption.
 
-## 🌟 Features
+## 🚀 Features
 
-- **🔐 OAuth2 Authentication** - Secure Google account authorization
-- **👥 Multi-Account Support** - Manage multiple Google accounts simultaneously  
-- **📅 Full Calendar Management** - Create, read, update, and delete events
-- **🕐 Availability Checking** - Find free time slots and check busy status
-- **📋 Calendar Listing** - Browse available calendars per account
-- **🔔 Meeting Integration** - Add Google Meet links to events
-- **⏰ Smart Reminders** - Configure popup reminders
-- **🎯 All-Day Events** - Support for both timed and all-day events
+- **🔐 OAuth2 Authentication** - Secure Google Calendar access
+- **👥 Multi-Account Support** - Manage multiple Google accounts
+- **📅 Full Calendar Management** - Events, calendars, availability
+- **🔒 Token Encryption** - Secure local token storage
+- **⏰ Smart Scheduling** - Find free slots and check availability  
+- **🎯 Meet Integration** - Automatic Google Meet link generation
+- **📧 Attendee Management** - Invite and notify attendees
+- **🔔 Reminders** - Custom reminder settings
 
-## 📋 Prerequisites
+## 📦 Quick Start
 
-- Node.js >= 20
-- Google Cloud Platform account with Calendar API enabled
-- OAuth2 credentials (Client ID and Client Secret)
+### Install and Run
 
-## 🚀 Quick Start
-
-### Using npx (recommended)
 ```bash
+# Install globally
+npm install -g @artik0din/mcp-google-calendar
+
+# Or run directly with npx
 npx @artik0din/mcp-google-calendar
 ```
-
-### Install globally
-```bash
-npm install -g @artik0din/mcp-google-calendar
-```
-
-## ⚙️ Configuration
 
 ### Google Cloud Setup
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing one
+2. Create a new project or select existing
 3. Enable the **Google Calendar API**
-4. Go to **Credentials** → **Create Credentials** → **OAuth 2.0 Client ID**
-5. Choose **Web application**
-6. Add redirect URI: `http://localhost:3000/oauth/callback`
-7. Copy the **Client ID** and **Client Secret**
+4. Go to **Credentials** → **Create Credentials** → **OAuth client ID**
+5. Choose **Desktop application** as application type
+6. Note your `client_id` and `client_secret`
 
-### Environment Variables
+### Environment Configuration
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GOOGLE_CLIENT_ID` | Yes | OAuth2 Client ID from Google Cloud Console |
-| `GOOGLE_CLIENT_SECRET` | Yes | OAuth2 Client Secret from Google Cloud Console |
-| `GOOGLE_REDIRECT_URI` | No | OAuth2 redirect URI (default: `http://localhost:3000/oauth/callback`) |
+```bash
+# Required environment variables
+export GOOGLE_CLIENT_ID="your_oauth_client_id"
+export GOOGLE_CLIENT_SECRET="your_oauth_client_secret"
 
-### MCP Client Setup
+# Optional
+export GOOGLE_REDIRECT_URI="urn:ietf:wg:oauth:2.0:oob"
+export MCP_MASTER_KEY="your_encryption_key"
+```
 
-#### Claude Desktop / Cursor
+Or copy `.env.example` to `.env` and fill in your values.
+
+## 🛠️ MCP Client Setup
+
+### Claude Desktop
+
+Add to your `claude_desktop_config.json`:
+
 ```json
 {
   "mcpServers": {
     "google-calendar": {
       "command": "npx",
-      "args": ["-y", "@artik0din/mcp-google-calendar"],
+      "args": ["@artik0din/mcp-google-calendar"],
       "env": {
-        "GOOGLE_CLIENT_ID": "your_client_id_here",
-        "GOOGLE_CLIENT_SECRET": "your_client_secret_here"
+        "GOOGLE_CLIENT_ID": "your_client_id",
+        "GOOGLE_CLIENT_SECRET": "your_client_secret"
       }
     }
   }
 }
 ```
 
-## 🔧 Available Tools
+### Other MCP Clients
 
-### add_google_account
-Add a Google account for calendar access. Two-step process: first call to get auth URL, second call with authorization code.
+The server communicates via stdio and follows the MCP protocol. Set up the executable path and environment variables according to your client's configuration format.
 
-**Parameters:**
-- `account_name` (string, required): Friendly name for the account (e.g., 'personal', 'work')
-- `auth_code` (string, optional): Authorization code from Google (after visiting auth URL)
+## 📋 Available Tools
 
-### list_accounts
-List all connected Google accounts.
+### 🔑 Account Management
 
-**Parameters:** None
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `add_google_account` | Connect a Google account | `account_name`, `auth_code?` |
+| `list_google_accounts` | List connected accounts | None |
+| `remove_google_account` | Remove an account | `account_name`, `confirm` |
 
-### remove_account
-Remove a connected Google account.
+### 📅 Calendar Operations
 
-**Parameters:**
-- `account_name` (string, required): Name of account to remove
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `list_calendars` | List all calendars | `account?` |
+| `list_events` | Get calendar events | `account?`, `calendar_id?`, `days_ahead?`, `max_results?`, `time_min?`, `time_max?` |
+| `create_event` | Create new event | `title`, `start`, `end`, `account?`, `calendar_id?`, `all_day?`, `description?`, `location?`, `attendees?`, `add_meet?`, `reminder_minutes?` |
+| `update_event` | Update existing event | `event_id`, `account?`, `calendar_id?`, `title?`, `start?`, `end?`, `all_day?`, `description?`, `location?`, `attendees?` |
+| `delete_event` | Delete event | `event_id`, `confirm`, `account?`, `calendar_id?`, `notify_attendees?` |
 
-### list_calendars
-List available calendars for an account.
+### ⏰ Availability & Scheduling
 
-**Parameters:**
-- `account` (string, optional): Account name (uses first account if not specified)
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `check_availability` | Find free slots or check busy times | `account?`, `calendar_ids?`, `days_ahead?`, `duration_minutes?`, `working_hours_start?`, `working_hours_end?`, `time_min?`, `time_max?` |
 
-### list_events
-List events from a calendar. Shows upcoming events for the next 7 days by default.
+## 💡 Usage Examples
 
-**Parameters:**
-- `account` (string, optional): Account name (uses first account if not specified)
-- `calendar_id` (string, optional): Calendar ID (uses primary if not specified)
-- `days_ahead` (number, optional): Number of days to look ahead (default: 7)
-- `max_results` (number, optional): Maximum events to return (default: 20)
-- `time_min` (string, optional): Start time (ISO format, overrides days_ahead)
-- `time_max` (string, optional): End time (ISO format)
+### First-time Setup
 
-### create_event
-Create a new calendar event. Supports both timed and all-day events.
+```bash
+# 1. Connect your Google account
+add_google_account account_name="work"
+# Follow the auth URL and get the authorization code
+add_google_account account_name="work" auth_code="4/xxx..."
 
-**Parameters:**
-- `account` (string, optional): Account name (uses first account if not specified)
-- `calendar_id` (string, optional): Calendar ID (uses primary if not specified)
-- `title` (string, required): Event title
-- `start` (string, required): Start time (ISO format for timed, YYYY-MM-DD for all-day)
-- `end` (string, required): End time (ISO format for timed, YYYY-MM-DD for all-day)
-- `all_day` (boolean, optional): Is this an all-day event?
-- `description` (string, optional): Event description
-- `location` (string, optional): Event location
-- `attendees` (array of strings, optional): Email addresses of attendees
-- `add_meet` (boolean, optional): Add a Google Meet link
-- `reminder_minutes` (number, optional): Popup reminder X minutes before (e.g., 30)
+# 2. List your calendars
+list_calendars account="work"
+```
 
-### update_event
-Update an existing calendar event.
+### Create Events
 
-**Parameters:**
-- `account` (string, optional): Account name (uses first account if not specified)
-- `calendar_id` (string, optional): Calendar ID (uses primary if not specified)
-- `event_id` (string, required): Event ID to update
-- `title` (string, optional): New event title
-- `start` (string, optional): New start time (ISO format)
-- `end` (string, optional): New end time (ISO format)
-- `all_day` (boolean, optional): Change to all-day event?
-- `description` (string, optional): New description (empty string to clear)
-- `location` (string, optional): New location (empty string to clear)
-- `attendees` (array of strings, optional): Replace attendees list
+```bash
+# Simple event
+create_event title="Team Meeting" start="2024-01-15T14:00:00" end="2024-01-15T15:00:00"
 
-### delete_event
-Delete a calendar event.
+# All-day event
+create_event title="Conference" start="2024-01-15" end="2024-01-16" all_day=true
 
-**Parameters:**
-- `account` (string, optional): Account name (uses first account if not specified)
-- `calendar_id` (string, optional): Calendar ID (uses primary if not specified)
-- `event_id` (string, required): Event ID to delete
-- `notify_attendees` (boolean, optional): Notify attendees of cancellation (default: true)
-- `confirm` (boolean, required): Must be true to confirm deletion
+# Event with attendees and Google Meet
+create_event title="Project Review" start="2024-01-15T10:00:00" end="2024-01-15T11:00:00" attendees=["alice@company.com", "bob@company.com"] add_meet=true
+```
 
-### check_availability
-Check availability and find free time slots.
+### Find Available Time
 
-**Parameters:**
-- `account` (string, optional): Account name (uses first account if not specified)
-- `calendar_ids` (array of strings, optional): Calendar IDs to check (uses primary if not specified)
-- `days_ahead` (number, optional): Number of days to look ahead (default: 7)
-- `duration_minutes` (number, optional): Duration of slot to find in minutes (e.g., 60 for 1 hour)
-- `working_hours_start` (number, optional): Working hours start (24h format, default: 9)
-- `working_hours_end` (number, optional): Working hours end (24h format, default: 18)
-- `time_min` (string, optional): Start time (ISO format, overrides days_ahead)
-- `time_max` (string, optional): End time (ISO format)
+```bash
+# Find 1-hour slots in the next 5 days
+check_availability duration_minutes=60 days_ahead=5
 
-## 🛡️ Security
+# Check specific time range with custom working hours
+check_availability duration_minutes=30 time_min="2024-01-15T08:00:00" time_max="2024-01-15T18:00:00" working_hours_start=8 working_hours_end=18
+```
 
-- All credentials are stored securely using Google's OAuth2 flow
-- Credentials are never logged or exposed in plain text
-- All API calls are made over HTTPS
-- Tokens are automatically refreshed when needed
+## 🔒 Security & Privacy
+
+- **Local Token Storage**: OAuth tokens are encrypted and stored locally in `~/.mcp-google-calendar/`
+- **AES-256-GCM Encryption**: Military-grade encryption for sensitive data
+- **No Cloud Dependencies**: All data stays on your machine
+- **OAuth2 Best Practices**: Secure authentication flow with refresh tokens
+- **Minimal Permissions**: Only requests necessary Calendar API scopes
+
+## 🏗️ Development
+
+```bash
+# Clone and setup
+git clone https://github.com/artik0din/mcp-google-calendar.git
+cd mcp-google-calendar
+npm install
+
+# Development mode
+npm run dev
+
+# Build for production
+npm run build
+```
 
 ## 📄 License
 
-MIT - See LICENSE for details
+MIT © 2026 Kevin Valfin
 
-## 🙏 Credits
+## 🤝 Contributing
 
-- **Author:** Kevin Valfin
-- **MCP SDK:** @modelcontextprotocol/sdk
-- **Google APIs:** googleapis package
+Contributions welcome! Please read the contributing guidelines and submit PRs to the main branch.
+
+## 🐛 Issues
+
+Found a bug? Please file an issue on [GitHub](https://github.com/artik0din/mcp-google-calendar/issues) with:
+- Node.js version
+- Operating system  
+- Error messages/logs
+- Steps to reproduce
+
+## 🔗 Links
+
+- [Model Context Protocol](https://modelcontextprotocol.io)
+- [Google Calendar API](https://developers.google.com/calendar/api)
+- [Claude Desktop](https://claude.ai/desktop)
+- [MCP Servers Registry](https://github.com/modelcontextprotocol/servers)

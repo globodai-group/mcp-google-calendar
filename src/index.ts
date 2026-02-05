@@ -1,24 +1,24 @@
+#!/usr/bin/env node
+
 /**
- * Google Calendar MCP Server
+ * MCP Google Calendar Server
  * 
- * Google Calendar integration with OAuth2.
+ * A standalone MCP server for Google Calendar integration with OAuth2.
  * Supports multiple accounts and full event management.
  * 
- * Environment Variables:
- * - GOOGLE_CLIENT_ID: OAuth2 client ID
- * - GOOGLE_CLIENT_SECRET: OAuth2 client secret  
- * - GOOGLE_REDIRECT_URI: OAuth2 redirect URI (default: http://localhost:3000/oauth/callback)
+ * Required environment variables:
+ * - GOOGLE_CLIENT_ID: OAuth2 client ID from Google Cloud Console
+ * - GOOGLE_CLIENT_SECRET: OAuth2 client secret from Google Cloud Console
+ * - GOOGLE_REDIRECT_URI: OAuth2 redirect URI (optional, defaults to oob)
+ * - MCP_MASTER_KEY: Master key for local encryption (optional, auto-generated)
  */
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { createMCPServer, startMCPServer, json, ToolDefinition } from "./lib/mcp-core.js";
 
-// Account management
+// Import all tools
 import * as addAccount from "./tools/add-account.js";
 import * as removeAccount from "./tools/remove-account.js";
-import * as listAccountsTool from "./tools/list-accounts.js";
-
-// Calendar operations
+import * as listAccounts from "./tools/list-accounts.js";
 import * as listCalendars from "./tools/list-calendars.js";
 import * as listEvents from "./tools/list-events.js";
 import * as createEvent from "./tools/create-event.js";
@@ -26,69 +26,89 @@ import * as updateEvent from "./tools/update-event.js";
 import * as deleteEvent from "./tools/delete-event.js";
 import * as checkAvailability from "./tools/check-availability.js";
 
-const tools = [
+// Convert tool exports to ToolDefinition format
+const tools: ToolDefinition[] = [
   // Account management
-  addAccount,
-  removeAccount,
-  listAccountsTool,
+  {
+    name: addAccount.name,
+    description: addAccount.description,
+    inputSchema: addAccount.parameters.shape,
+    handler: async (args) => json(await addAccount.execute(args as any)),
+  },
+  {
+    name: removeAccount.name,
+    description: removeAccount.description,
+    inputSchema: removeAccount.parameters.shape,
+    handler: async (args) => json(await removeAccount.execute(args as any)),
+  },
+  {
+    name: listAccounts.name,
+    description: listAccounts.description,
+    inputSchema: listAccounts.parameters.shape,
+    handler: async (args) => json(await listAccounts.execute(args as any)),
+  },
   // Calendar operations
-  listCalendars,
-  listEvents,
-  createEvent,
-  updateEvent,
-  deleteEvent,
-  checkAvailability,
+  {
+    name: listCalendars.name,
+    description: listCalendars.description,
+    inputSchema: listCalendars.parameters.shape,
+    handler: async (args) => json(await listCalendars.execute(args as any)),
+  },
+  {
+    name: listEvents.name,
+    description: listEvents.description,
+    inputSchema: listEvents.parameters.shape,
+    handler: async (args) => json(await listEvents.execute(args as any)),
+  },
+  {
+    name: createEvent.name,
+    description: createEvent.description,
+    inputSchema: createEvent.parameters.shape,
+    handler: async (args) => json(await createEvent.execute(args as any)),
+  },
+  {
+    name: updateEvent.name,
+    description: updateEvent.description,
+    inputSchema: updateEvent.parameters.shape,
+    handler: async (args) => json(await updateEvent.execute(args as any)),
+  },
+  {
+    name: deleteEvent.name,
+    description: deleteEvent.description,
+    inputSchema: deleteEvent.parameters.shape,
+    handler: async (args) => json(await deleteEvent.execute(args as any)),
+  },
+  {
+    name: checkAvailability.name,
+    description: checkAvailability.description,
+    inputSchema: checkAvailability.parameters.shape,
+    handler: async (args) => json(await checkAvailability.execute(args as any)),
+  },
 ];
 
 async function main() {
-  // Verify environment variables
-  const requiredEnvs = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'];
-  const missing = requiredEnvs.filter(env => !process.env[env]);
-  if (missing.length > 0) {
-    console.error(`❌ Missing environment variables: ${missing.join(', ')}`);
+  // Check required environment variables
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.error("[mcp-google-calendar] Error: Missing required environment variables");
+    console.error("Required: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET");
+    console.error("Optional: GOOGLE_REDIRECT_URI, MCP_MASTER_KEY");
+    console.error("\nSee README.md for setup instructions.");
     process.exit(1);
   }
 
-  const server = new McpServer({
-    name: "mcp-google-calendar",
-    version: "1.0.0",
-  });
+  const server = createMCPServer(
+    {
+      name: "mcp-google-calendar", 
+      version: "1.0.0",
+      description: "Google Calendar MCP Server with OAuth2 and multi-account support",
+    },
+    tools
+  );
 
-  // Register all tools
-  for (const tool of tools) {
-    server.tool(
-      tool.name,
-      tool.description,
-      tool.parameters.shape,
-      async (args: Record<string, unknown>) => {
-        try {
-          const result = await tool.execute(args as any);
-          return {
-            content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
-          };
-        } catch (error) {
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: JSON.stringify({
-                  success: false,
-                  error: error instanceof Error ? error.message : "Unknown error",
-                }),
-              },
-            ],
-            isError: true,
-          };
-        }
-      }
-    );
-  }
-
-  // Connect to stdio transport
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  
-  console.error("✅ Google Calendar MCP Server started");
+  await startMCPServer(server);
 }
 
-main().catch(console.error);
+// Run the server
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(console.error);
+}

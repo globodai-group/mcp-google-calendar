@@ -3,8 +3,8 @@
  */
 
 import { z } from "zod";
-import { findAvailableSlots, getFreeBusy } from "../lib/calendar-api";
-import { listAccounts } from "../lib/google-auth";
+import { findAvailableSlots, getFreeBusy } from "../lib/calendar-api.js";
+import { listAccounts } from "../lib/google-auth.js";
 
 export const name = "check_availability";
 

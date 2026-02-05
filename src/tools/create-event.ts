@@ -3,8 +3,8 @@
  */
 
 import { z } from "zod";
-import { createEvent } from "../lib/calendar-api";
-import { listAccounts } from "../lib/google-auth";
+import { createEvent } from "../lib/calendar-api.js";
+import { listAccounts } from "../lib/google-auth.js";
 
 export const name = "create_event";
 
