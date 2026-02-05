@@ -1,5 +1,5 @@
 {
-  "name": "@artik0din/mcp-google-calendar",
+  "name": "globodai-mcp-google-calendar",
   "version": "1.0.0",
   "description": "MCP server for Google Calendar integration with OAuth2 and multi-account support",
   "type": "module",
@@ -34,12 +34,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/artik0din/mcp-google-calendar.git"
+    "url": "https://github.com/globodai-group/mcp-google-calendar.git"
   },
   "bugs": {
-    "url": "https://github.com/artik0din/mcp-google-calendar/issues"
+    "url": "https://github.com/globodai-group/mcp-google-calendar/issues"
   },
-  "homepage": "https://github.com/artik0din/mcp-google-calendar#readme",
+  "homepage": "https://github.com/globodai-group/mcp-google-calendar#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
     "googleapis": "^144.0.0",
